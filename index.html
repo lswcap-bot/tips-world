@@ -1,0 +1,1218 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIPS World — 대한민국 스타트업 생태계 지도</title>
+
+  <!-- SEO & Social -->
+  <meta name="description" content="2013~2025년 TIPS 선정 기업 4,000개+를 인터랙티브 보로노이 차트로 탐색하세요. 연도별·분야별·운영기관별 필터 제공.">
+  <meta property="og:title"       content="TIPS World — 대한민국 스타트업 생태계 지도">
+  <meta property="og:description" content="TIPS 선정 기업 4,000개+를 한눈에 보는 인터랙티브 시각화 대시보드">
+  <meta property="og:type"        content="website">
+  <meta name="twitter:card"       content="summary_large_image">
+
+  <!-- DNS prefetch + preconnect for zero-latency font & CDN loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+  <link rel="dns-prefetch" href="https://docs.google.com">
+
+  <!-- Web fonts — display=swap ensures text visible during load -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;900&family=Montserrat:wght@100;200;300;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg:#06030c; --c-year:#f72585; --c-field:#4361ee; --c-agency:#f4a261;
+      --text:#f0e0d8; --muted:#9a7060;
+    }
+    body {
+      background-color: #06030c;
+      background-image:
+        radial-gradient(ellipse 200% 55% at 50% -2%, rgba(220,20,100,.22) 0%, transparent 52%),
+        radial-gradient(ellipse 90% 70% at 2%  110%, rgba(50,15,90,.18) 0%, transparent 55%),
+        radial-gradient(ellipse 90% 70% at 98% 110%, rgba(80,15,55,.16) 0%, transparent 55%);
+      color:var(--text);
+      font-family:'Noto Sans KR','Malgun Gothic',sans-serif;
+      overflow-x:hidden;
+    }
+
+    /* COSMIC STARS – pure CSS */
+    body::before {
+      content:'';
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:
+        radial-gradient(1px 1px at  8%  12%, rgba(255,255,255,.55) 0%, transparent 100%),
+        radial-gradient(1px 1px at 22%   5%, rgba(255,255,255,.40) 0%, transparent 100%),
+        radial-gradient(1px 1px at 38%  18%, rgba(255,255,255,.30) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55%   8%, rgba(255,255,255,.50) 0%, transparent 100%),
+        radial-gradient(1px 1px at 71%  15%, rgba(255,255,255,.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85%   4%, rgba(255,255,255,.60) 0%, transparent 100%),
+        radial-gradient(1px 1px at 94%  22%, rgba(255,255,255,.40) 0%, transparent 100%),
+        radial-gradient(1px 1px at  3%  35%, rgba(255,255,255,.25) 0%, transparent 100%),
+        radial-gradient(1px 1px at 15%  42%, rgba(255,255,255,.45) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30%  30%, rgba(255,255,255,.30) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 48% 38%, rgba(255,255,255,.55) 0%, transparent 100%),
+        radial-gradient(1px 1px at 63%  25%, rgba(255,255,255,.35) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78%  33%, rgba(255,255,255,.42) 0%, transparent 100%),
+        radial-gradient(1px 1px at 91%  40%, rgba(255,255,255,.28) 0%, transparent 100%),
+        radial-gradient(2px 2px at 18%   2%, rgba(255,200,240,.70) 0%, transparent 100%),
+        radial-gradient(2px 2px at 73%   6%, rgba(200,220,255,.65) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 42% 2%, rgba(255,240,200,.60) 0%, transparent 100%);
+    }
+    #app, #ls { position:relative; z-index:1; }
+
+    /* LOADING */
+    #ls { position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;
+      align-items:center;justify-content:center;z-index:9999;gap:14px; }
+    #ls h2 { font-size:2.4rem;font-weight:900;
+      background:linear-gradient(135deg,#f72585,#f4a261);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+    .spin { width:44px;height:44px;border:4px solid #2a1520;border-top-color:#f72585;
+      border-radius:50%;animation:spin .8s linear infinite; }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #ls p { color:var(--muted);font-size:.85rem; }
+
+    /* ─── ARC LAYOUT ─── */
+    #arc-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: clamp(20px, 7vw, 110px);
+      padding-bottom: 40px;
+    }
+    #arc-svg {
+      position: absolute;
+      top: 0;
+      pointer-events: none;
+      overflow: visible;
+    }
+    #arc-tabs {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      pointer-events: none;
+    }
+    .arc-btn {
+      position: absolute;
+      border-radius: 20px;
+      border: 2px solid;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(6,3,12,.82);
+      font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+      pointer-events: all;
+      transition: background .2s, color .2s, opacity .2s;
+      letter-spacing: .07em;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+    .arc-btn.on { color: #fff !important; }
+    .arc-btn:hover { opacity: .82; }
+
+    /* ── Loading screen ── */
+    #ls {
+      background:
+        radial-gradient(ellipse 200% 55% at 50% -2%, rgba(220,20,100,.20) 0%, transparent 52%),
+        #06030c;
+    }
+    #ls h2 {
+      font-family: 'Montserrat', 'Noto Sans KR', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: .1em;
+      /* clean – no glow */
+    }
+    #ls h2 span { color: #f72585; }
+
+    /* CIRCLE – fills viewport width, scrollable */
+    #cw { display:flex;justify-content:center;align-items:flex-start; }
+
+    /* ACTION BTNS */
+    #ab { display:flex;justify-content:center;gap:10px;padding:6px 12px 2px;flex-wrap:wrap; }
+    .ab { padding:6px 18px;border-radius:8px;border:none;font-size:.82rem;font-weight:700;
+      cursor:pointer;transition:filter .2s,transform .15s;font-family:inherit;color:#fff; }
+    .ab:hover { filter:brightness(1.15);transform:translateY(-1px); }
+
+    /* LEGEND */
+    #lg { display:flex;flex-wrap:wrap;justify-content:center;gap:6px;
+      padding:2px 16px;max-width:1000px;margin:0 auto; }
+    .li { display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--muted); }
+    .ld { width:9px;height:9px;border-radius:2px;flex-shrink:0; }
+
+    /* STATS */
+    #sb { display:flex;justify-content:center;gap:20px;padding:3px 16px 4px;font-size:.75rem;color:var(--muted); }
+    #sb b { color:var(--text); }
+
+    /* SUB MENU */
+    #sm { display:flex;flex-wrap:wrap;justify-content:center;gap:5px;
+      padding:14px 16px 14px;max-width:1000px;margin:0 auto; }
+    .su { padding:3px 11px;border-radius:13px;border:1.5px solid;font-size:.76rem;
+      font-weight:600;cursor:pointer;transition:all .15s;background:transparent;font-family:inherit; }
+    .su.on { color:#fff!important; }
+
+    /* FOOTER */
+    #ft { text-align:center;padding:6px;font-size:.68rem;color:#5a3040;border-top:1px solid #2a1525; }
+
+    /* ─── SHARE / EMBED BUTTON ─── */
+    #share-btn {
+      position:fixed; bottom:18px; right:18px; z-index:200;
+      display:flex; align-items:center; gap:6px;
+      background:rgba(10,5,15,.88); border:1.5px solid rgba(200,100,130,.30);
+      border-radius:22px; padding:7px 16px 7px 12px;
+      color:rgba(220,160,180,.60); font-size:.74rem; font-weight:600;
+      font-family:'Montserrat','Noto Sans KR',sans-serif; letter-spacing:.06em;
+      cursor:pointer; transition:all .2s; white-space:nowrap;
+    }
+    #share-btn:hover {
+      border-color:rgba(247,37,133,.75); color:#f72585;
+      background:rgba(20,6,14,.96);
+    }
+
+    /* ─── EMBED MODE ─── */
+    body.embed { background:transparent!important; background-image:none!important; }
+    body.embed::before { display:none!important; }
+    body.embed #arc-wrap { padding-top:0!important; padding-bottom:0!important; }
+    body.embed #ab, body.embed #lg, body.embed #sb,
+    body.embed #sm, body.embed #ft, body.embed #share-btn { display:none!important; }
+
+    /* ─── SHARE MODAL extras ─── */
+    .share-code {
+      width:100%; min-height:80px; background:#0e0812;
+      border:1px solid #5a2535; border-radius:8px; padding:10px 12px;
+      color:#4cc9f0; font-size:.77rem; font-family:'Courier New',monospace;
+      resize:vertical; line-height:1.6; cursor:text;
+    }
+    .share-copy-btn {
+      margin-top:10px; padding:8px 22px; background:#f72585;
+      border:none; border-radius:8px; color:#fff; font-weight:700;
+      cursor:pointer; font-family:inherit; font-size:.85rem; transition:filter .15s;
+    }
+    .share-copy-btn:hover { filter:brightness(1.15); }
+    .share-copy-btn.ok { background:#06d6a0; }
+    .share-opt { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+    .share-opt label { display:flex; align-items:center; gap:5px;
+      font-size:.78rem; color:var(--muted); cursor:pointer; }
+    .share-opt input[type=number] {
+      width:70px; background:#120810; border:1px solid #5a2535; border-radius:5px;
+      color:var(--text); padding:3px 6px; font-size:.78rem; font-family:inherit; }
+    .share-preview-link { display:inline-block; margin:10px 0 0 12px;
+      color:#4cc9f0; font-size:.78rem; text-decoration:none; }
+    .share-preview-link:hover { text-decoration:underline; }
+
+    /* TOOLTIP */
+    #tt { position:fixed;background:rgba(16,6,12,.97);border:1px solid #c06040;border-radius:8px;
+      padding:7px 11px;font-size:.78rem;pointer-events:none;z-index:800;max-width:220px;
+      line-height:1.6;display:none; }
+    #tt strong { color:#f5d080;display:block;margin-bottom:2px; }
+    #tt em { color:var(--muted);font-style:normal;font-size:.7rem; }
+
+    /* MODAL */
+    .mo { position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:1000;display:flex;
+      align-items:center;justify-content:center;animation:fi .2s; }
+    @keyframes fi{from{opacity:0}to{opacity:1}}
+    .mb { background:#1c0f18;border:2px solid #5a2535;border-radius:14px;padding:22px;
+      width:min(92vw,760px);max-height:92vh;overflow:auto;position:relative;animation:su .22s; }
+    @keyframes su{from{transform:translateY(18px);opacity:0}to{transform:none;opacity:1}}
+    .mc { position:absolute;top:10px;right:14px;background:none;border:none;
+      color:#c08060;font-size:1.3rem;cursor:pointer;line-height:1; }
+    .mc:hover{color:#fff}
+    .mt { font-size:1.05rem;font-weight:700;color:#f5d080;margin-bottom:14px;padding-right:22px; }
+  </style>
+</head>
+<body>
+<div id="ls">
+  <h2><span>TIPS</span> World</h2>
+  <div class="spin"></div>
+  <p id="lm">데이터 준비 중…</p>
+</div>
+<div id="app" style="display:none">
+  <div id="arc-wrap">
+    <div id="cw"></div>
+    <svg id="arc-svg" style="position:absolute;top:0;pointer-events:none;overflow:visible;"></svg>
+    <div id="arc-tabs"   style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+    <div id="arc-action" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></div>
+  </div>
+  <div id="ab"></div>
+  <div id="lg"></div>
+  <div id="sb"></div>
+  <div id="sm"></div>
+  <div id="ft">Source: 중소벤처기업부 TIPS 프로그램 공개 데이터 | Visual inspired by Visual Capitalist</div>
+</div>
+<div id="tt"></div>
+<button id="share-btn" onclick="showShare()">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </svg>
+  퍼가기
+</button>
+
+<!-- All libraries loaded from jsDelivr CDN (HTTPS, globally cached, no local files needed) -->
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-weighted-voronoi@1.1.3/build/d3-weighted-voronoi.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-voronoi-map@2.1.1/build/d3-voronoi-map.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-voronoi-treemap@1.1.1/build/d3-voronoi-treemap.js" crossorigin="anonymous"></script>
+
+<script>
+// ══════ EMBED & URL STATE ══════
+const IS_EMBED = new URLSearchParams(location.search).get('embed') === 'true';
+
+// ══════ EMBEDDED DATA ══════
+let RAW_DATA = [];
+let AGENCY_MAP = {};
+let AGENCY_ROWS = [];   // full agency table rows for display
+
+// ══════ PALETTES ══════
+const PAL = {
+  year:   ['#f72585','#e91e8c','#d62839','#ff4d6d','#ff7096','#c8155e','#cf3a7a',
+           '#b5179e','#9b2293','#7b1fa2','#e05c87','#f0436e','#ff9a5c'],
+  field:  ['#4361ee','#3a0ca3','#7209b7','#4cc9f0','#4895ef','#06d6a0','#118ab2',
+           '#0077b6','#023e8a','#48cae4','#56cfe1','#2ec4b6','#80ffdb'],
+  agency: ['#f4a261','#e76f51','#e9c46a','#2a9d8f','#264653','#a8dadc','#457b9d',
+           '#f1c40f','#e67e22','#1abc9c','#8e44ad','#16a085','#c0392b','#2980b9',
+           '#27ae60','#d35400','#8e44ad','#2c3e50']
+};
+
+// ══════ PARSE UTILS ══════
+function parseDate(s) {
+  if (!s) return null; s = String(s).trim();
+  if (/^\d{8}$/.test(s)) return new Date(+s.slice(0,4),+s.slice(4,6)-1,+s.slice(6,8));
+  let m = s.match(/^(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})$/);
+  if (m) return new Date(+m[1],+m[2]-1,+m[3]);
+  m = s.match(/^(\d{4})[.\-\/](\d{1,2})$/);
+  if (m) return new Date(+m[1],+m[2]-1,1);
+  m = s.match(/^(\d{4})$/); if (m) return new Date(+m[1],0,1);
+  return null;
+}
+function normAgency(n){ return n ? n.replace(/\s*\([^)]*\)\s*/g,'').trim() : ''; }
+function mosDiff(d1,d2){
+  if(!d1||!d2||isNaN(d1)||isNaN(d2)) return null;
+  const d=(d2.getFullYear()-d1.getFullYear())*12+d2.getMonth()-d1.getMonth();
+  return d>=0?d:null;
+}
+function trunc(s,n){return !s?'':s.length>n?s.slice(0,n)+'…':s;}
+
+// ══════ FETCH DATA FROM GOOGLE SHEETS ══════
+const COMPANY_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSZYnkDF2PEb-0Wx-ACpkTrRrYfQN4fGNwmulHLhbkOflVIn_QLVyqTa3Ncpii55ouc9BNh2yIxr9c0/pub?gid=1899182647&single=true&output=csv';
+const AGENCY_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSNUfb9xoTn5Mn_7VqM3Xy5ER4pMoqhqfY_haHjfhFlGz4maYNc7-Ru4X_kV5_A5A6ilVj_yEmkvukZ/pub?output=csv';
+
+function parseCSV(text) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i+1]==='"') { f+='"'; i++; } else q=false; }
+      else f += c;
+    } else {
+      if      (c === '"')  q = true;
+      else if (c === ',')  { row.push(f); f=''; }
+      else if (c === '\n') { row.push(f); if(row.some(x=>x)) rows.push(row); row=[]; f=''; }
+      else if (c !== '\r') f += c;
+    }
+  }
+  if (row.length) { row.push(f); if(row.some(x=>x)) rows.push(row); }
+  return rows;
+}
+
+function parseAgencyCSV(csvText) {
+  const rows = parseCSV(csvText);
+  if (rows.length < 2) return {};
+  const hdrs = rows[0].map(h => h.trim());
+  const iN  = hdrs.findIndex(h => /운영사|기관명|기관/i.test(h));
+  const iC  = hdrs.findIndex(h => /연락처|contact|url|홈피/i.test(h));
+  const iR  = hdrs.findIndex(h => /지역|region/i.test(h));
+  const iF  = hdrs.findIndex(h => /전문투자|투자분야|분야/i.test(h));
+  const map = {};
+
+  // Store full rows for the list modal
+  AGENCY_ROWS = rows.slice(1).map(r => {
+    const raw    = iN >= 0 ? (r[iN]||'') : '';
+    const name   = normAgency(raw.replace(/\n/g,'').trim());
+    let   url    = '';
+    if (iC >= 0) {
+      const lines = (r[iC]||'').split('\n').map(l=>l.trim()).filter(Boolean);
+      const ul = lines.find(l => /\.\w{2,}/.test(l) && !l.startsWith('(') && !l.includes('@'));
+      if (ul) url = ul.startsWith('http') ? ul : 'https://' + ul;
+    }
+    return {
+      name,
+      region:  iR >= 0 ? ((r[iR]||'').trim()||'기타') : '기타',
+      field:   iF >= 0 ? (r[iF]||'').replace(/\n/g,' ').trim() : '',
+      url
+    };
+  }).filter(a => a.name);
+
+  AGENCY_ROWS.forEach(a => { map[a.name] = [a.url, a.region]; });
+  return map;
+}
+
+// ── Fetch with timeout + 1 retry (handles transient Google Sheets CDN hiccups) ──
+async function fetchCSV(url, timeoutMs = 18000, retries = 1) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(url, {
+        signal: ctrl.signal,
+        // Google Sheets pub CSV always sends Access-Control-Allow-Origin: *
+        // No proxy needed — works from any domain including GitHub Pages
+        cache: 'no-store'   // always get fresh data; GH Pages has no server cache anyway
+      });
+      clearTimeout(tid);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.text();
+    } catch (e) {
+      clearTimeout(tid);
+      if (attempt < retries) { await new Promise(r => setTimeout(r, 1200)); continue; }
+      throw e;
+    }
+  }
+}
+
+async function fetchData() {
+  const [csvText, agText] = await Promise.all([
+    fetchCSV(COMPANY_CSV_URL),
+    fetchCSV(AGENCY_CSV_URL)
+  ]);
+
+  // — company CSV —
+  const rows = parseCSV(csvText);
+  if (rows.length > 1) {
+    const hdrs = rows[0].map(h=>h.trim());
+    const hi = {
+      yr:  hdrs.findIndex(h=>/년도|연도|year/i.test(h)),
+      nm:  hdrs.findIndex(h=>/회사명|기업명|company|name/i.test(h)),
+      fl:  hdrs.findIndex(h=>/분야|sector|field|category/i.test(h)),
+      fd:  hdrs.findIndex(h=>/설립|창업|found/i.test(h)),
+      sl:  hdrs.findIndex(h=>/선정|tips.*일|selected/i.test(h)),
+      ag:  hdrs.findIndex(h=>/기관|agency/i.test(h)),
+      ur:  hdrs.findIndex(h=>h.trim()==='사이트'||/^홈피$|^홈페이지$/i.test(h.trim())),
+    };
+    RAW_DATA = rows.slice(1).map(r=>[
+      hi.yr>=0?r[hi.yr]:'', hi.nm>=0?r[hi.nm]:'', hi.fl>=0?r[hi.fl]:'',
+      hi.fd>=0?r[hi.fd]:'', hi.sl>=0?r[hi.sl]:'',
+      hi.ag>=0?r[hi.ag]:'', hi.ur>=0?r[hi.ur]:''
+    ]);
+  }
+
+  // — agency CSV —
+  const parsed = parseAgencyCSV(agText);
+  if (Object.keys(parsed).length) AGENCY_MAP = parsed;
+}
+
+// ══════ BUILD COMPANY DATA ══════
+// RAW_DATA row: [year, name, field, founded, selected, agency, siteUrl]
+function buildData() {
+  return RAW_DATA.map(r => {
+    const yr   = +r[0];
+    const 설립  = parseDate(r[3]);
+    const 선정  = parseDate(r[4]);
+    const 기관원 = r[5]||'';
+    const 기관   = normAgency(기관원);
+    let   홈피   = (r[6]||'').trim();
+    // ensure protocol
+    if (홈피 && !홈피.startsWith('http')) 홈피 = 'https://' + 홈피;
+    return {
+      연도:yr, 회사명:r[1]||'', 분야:r[2]||'기타',
+      설립일:설립, 선정일:선정, 기관원본:기관원, 기관,
+      소요월:mosDiff(설립,선정), 홈피
+    };
+  }).filter(d => d.회사명 && d.연도>=2013 && d.연도<=2025);
+}
+
+// ══════ STATE ══════
+const S = { data:[], tab:'year', year:2025, field:null };
+
+const years   = () => [...new Set(S.data.map(d=>d.연도))].sort((a,b)=>a-b);
+const fields  = () => [...new Set(S.data.map(d=>d.분야).filter(Boolean))].sort();
+
+// ══════ URL PARAM SYNC ══════
+function readUrlParams() {
+  const p = new URLSearchParams(location.search);
+  const view = p.get('view'), id = p.get('id');
+  if      (view==='year')   { S.tab='year';   if(id && !isNaN(+id)) S.year=+id; }
+  else if (view==='field')  { S.tab='field';  S.field = id||null; }
+  else if (view==='agency') { S.tab='agency'; }
+}
+function writeUrlParams() {
+  const p = new URLSearchParams();
+  p.set('view', S.tab);
+  if (S.tab==='year')                  p.set('id', String(S.year));
+  else if (S.tab==='field' && S.field) p.set('id', S.field);
+  if (IS_EMBED) p.set('embed','true');
+  history.replaceState({}, '', '?' + p.toString());
+}
+function viewLabel() {
+  if (S.tab==='year')  return `연도별 · ${S.year}년`;
+  if (S.tab==='field') return S.field ? `사업분야 · ${S.field}` : '사업분야 · 전체';
+  return '운영기관';
+}
+
+// ══════ SHARE / EMBED MODAL ══════
+function showShare() {
+  const base = location.origin + location.pathname;
+  function buildSrc() {
+    const p = new URLSearchParams();
+    p.set('view', S.tab);
+    if (S.tab==='year')                  p.set('id', String(S.year));
+    else if (S.tab==='field' && S.field) p.set('id', S.field);
+    p.set('embed','true');
+    return base + '?' + p.toString();
+  }
+  function buildCode(src, h, transparent) {
+    const bg = transparent ? ' allowtransparency="true"' : '';
+    return `<iframe src="${src}" width="100%" height="${h}"` +
+           ` frameborder="0" style="border:none;overflow:hidden;"${bg}></iframe>`;
+  }
+
+  modal('공유 / 퍼가기', ct => {
+    // Current view info
+    const info = document.createElement('div');
+    info.style.cssText = 'background:rgba(255,255,255,.04);border:1px solid #3a2030;border-radius:8px;padding:8px 14px;margin-bottom:14px;font-size:.8rem;color:var(--muted);';
+    info.innerHTML = `현재 뷰: <b style="color:var(--text)">${viewLabel()}</b>`;
+    ct.appendChild(info);
+
+    // Options row
+    const optRow = document.createElement('div');
+    optRow.className = 'share-opt';
+    optRow.innerHTML = `
+      <label>높이(px) <input type="number" id="sh-h" value="620" min="200" max="2000" step="10"></label>
+      <label><input type="checkbox" id="sh-tr" checked> 투명 배경</label>`;
+    ct.appendChild(optRow);
+
+    // Code textarea
+    const ta = document.createElement('textarea');
+    ta.className = 'share-code';
+    ta.readOnly = true;
+    ta.onclick = () => ta.select();
+    ct.appendChild(ta);
+
+    // Update code on option change
+    function refresh() {
+      const h = document.getElementById('sh-h').value || '620';
+      const tr = document.getElementById('sh-tr').checked;
+      ta.value = buildCode(buildSrc(), h, tr);
+    }
+    refresh();
+    document.getElementById('sh-h').oninput = refresh;
+    document.getElementById('sh-tr').onchange = refresh;
+
+    // Buttons row
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:10px;';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'share-copy-btn';
+    copyBtn.textContent = '📋 코드 복사';
+    copyBtn.onclick = () => {
+      const code = ta.value;
+      (navigator.clipboard ? navigator.clipboard.writeText(code) : Promise.reject())
+        .catch(() => { ta.select(); document.execCommand('copy'); return Promise.resolve(); })
+        .then(() => {
+          copyBtn.textContent = '✅ 복사됨!'; copyBtn.classList.add('ok');
+          setTimeout(()=>{ copyBtn.textContent='📋 코드 복사'; copyBtn.classList.remove('ok'); }, 2200);
+        });
+    };
+    row.appendChild(copyBtn);
+
+    const prevLink = document.createElement('a');
+    prevLink.className = 'share-preview-link';
+    prevLink.textContent = '↗ 임베드 미리보기';
+    prevLink.target = '_blank'; prevLink.rel = 'noopener';
+    prevLink.onclick = () => { prevLink.href = buildSrc(); };
+    prevLink.href = buildSrc();
+    row.appendChild(prevLink);
+
+    ct.appendChild(row);
+  });
+}
+
+function viewData() {
+  if (S.tab==='year')   return S.data.filter(d=>d.연도===S.year);
+  if (S.tab==='field')  return S.field ? S.data.filter(d=>d.분야===S.field) : S.data;
+  return S.data;
+}
+
+// ══════ HIERARCHY BUILDERS ══════
+// Company hierarchy – always grouped by 분야
+function buildCompanyHier() {
+  const vd=viewData();
+  const grps=d3.group(vd, d=>d.분야||'기타');
+  return {
+    name:'root',
+    children:[...grps].map(([k,vs])=>({
+      name:k,
+      children:vs.map(v=>({name:v.회사명, _d:v, value:1}))
+    })).filter(g=>g.children.length>0)
+  };
+}
+
+// Agency hierarchy – from AGENCY_MAP, grouped by region
+function buildAgencyHier() {
+  // count companies per (normalized) agency
+  const cnt={};
+  S.data.forEach(d=>{ if(d.기관) cnt[d.기관]=(cnt[d.기관]||0)+1; });
+
+  const byRegion={};
+  Object.entries(AGENCY_MAP).forEach(([name, info]) => {
+    const url    = (info[0]||'').trim();
+    const region = (info[1]||'기타').trim() || '기타';
+    if (!byRegion[region]) byRegion[region]=[];
+    byRegion[region].push({ name, url, value: Math.max(1, cnt[name]||0) });
+  });
+
+  return {
+    name:'root',
+    children: Object.entries(byRegion)
+      .map(([region,ags])=>({
+        name:region,
+        children:ags.map(a=>({ name:a.name, _agency:a, value:a.value }))
+      }))
+      .filter(g=>g.children.length>0)
+      .sort((a,b)=>
+        b.children.reduce((s,c)=>s+c.value,0) -
+        a.children.reduce((s,c)=>s+c.value,0)
+      )
+  };
+}
+
+// ══════ VORONOI ══════
+function circPoly(cx,cy,r,n=80){
+  return Array.from({length:n},(_,i)=>{const a=i/n*2*Math.PI;return[cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+}
+
+async function render() {
+  const isAgency = S.tab==='agency';
+  const hier     = isAgency ? buildAgencyHier() : buildCompanyHier();
+  const pal      = S.tab==='year' ? PAL.year : S.tab==='field' ? PAL.field : PAL.agency;
+  const gNames   = hier.children.map(g=>g.name);
+  const cSc      = d3.scaleOrdinal().domain(gNames).range(pal);
+
+  // ── Circle fills screen width ──
+  const W  = window.innerWidth;
+  const sz = Math.min(W * 0.97, 2000);   // essentially full width, no height cap
+  const cx = sz/2, cy = sz/2;
+  const r  = sz * 0.47;
+
+  const leafCount = hier.children.reduce((s,g)=>s+g.children.length,0);
+  const cw = document.getElementById('cw');
+
+  cw.innerHTML=`<svg width="${sz}" height="${sz}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="#1c1020" stroke="#5a2535" stroke-width="3"/>
+    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle"
+      fill="#c08060" font-size="${Math.max(12, sz*0.018)}"
+      font-family="Noto Sans KR,sans-serif">${leafCount}개 ${isAgency?'기관':'기업'} 배치 중…</text>
+  </svg>`;
+
+  await new Promise(res=>setTimeout(res,0));
+
+  // Compute voronoi
+  let root=null;
+  try {
+    const clip = circPoly(cx,cy,r);
+    root = d3.hierarchy(hier).sum(d=>d.value||0);
+    d3.voronoiTreemap()
+      .clip(clip).convergenceRatio(.008).maxIterationCount(120)(root);
+  } catch(e){ console.error('voronoi error',e); }
+
+  const svg = d3.create('svg')
+    .attr('width',sz).attr('height',sz).attr('viewBox',`0 0 ${sz} ${sz}`);
+  svg.append('defs').append('clipPath').attr('id','cc')
+    .append('circle').attr('cx',cx).attr('cy',cy).attr('r',r);
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r+5)
+    .attr('fill','none').attr('stroke','#8a4050').attr('stroke-width',4).attr('opacity',.7);
+  svg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r+10)
+    .attr('fill','none').attr('stroke','#5a2535').attr('stroke-width',2).attr('opacity',.4);
+
+  const g   = svg.append('g').attr('clip-path','url(#cc)');
+  const lbG = svg.append('g').attr('clip-path','url(#cc)');
+  const tt  = document.getElementById('tt');
+
+  if (root) {
+    root.descendants().forEach(node=>{
+      if (!node.polygon||node.depth===0) return;
+
+      const poly   = node.polygon;
+      const pd     = poly.map((p,i)=>`${i===0?'M':'L'}${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(' ')+'Z';
+      const area   = Math.abs(d3.polygonArea(poly));
+      const [pcx,pcy] = d3.polygonCentroid(poly);
+      let fill, stroke;
+
+      if (node.depth===1) {
+        const base = d3.color(cSc(node.data.name));
+        fill   = base ? base.copy({opacity:.14}).toString() : 'rgba(60,20,40,.3)';
+        stroke = base ? base.brighter(.5).toString() : '#664';
+      } else {
+        const pn   = node.parent.data.name;
+        const base = d3.color(cSc(pn));
+        const idx  = node.parent.children.indexOf(node);
+        const tot  = node.parent.children.length;
+        const t    = tot>1 ? idx/(tot-1) : .5;
+        fill   = base ? d3.interpolate(base.darker(.6).toString(), base.brighter(.6).toString())(t) : '#555';
+        stroke = '#12080e';
+      }
+
+      const path = g.append('path').attr('d',pd).attr('fill',fill).attr('stroke',stroke)
+        .attr('stroke-width', node.depth===1 ? 1.5 : .7);
+
+      if (node.depth===2) {
+        // ── Company cell ──
+        if (!isAgency) {
+          const d = node.data._d;
+          path.style('cursor', d?.홈피 ? 'pointer' : 'default');
+          path.on('mouseenter', evt=>{
+              path.attr('fill', d3.color(fill)?.brighter(.5)?.toString()??fill).attr('stroke-width',1.4);
+              tt.style.display='block';
+              tt.innerHTML=`<strong>${d?.회사명||node.data.name}</strong>
+                <span>${d?.분야||''}</span>
+                ${d?.기관?`<em>운영: ${d.기관}</em>`:''}
+                ${d?.소요월!=null?`<em>설립→선정: ${d.소요월}개월</em>`:''}
+                ${d?.홈피?`<em style="color:#4cc9f0">🔗 클릭하여 사이트 열기</em>`:''}`;
+            })
+            .on('mousemove', evt=>{tt.style.left=(evt.clientX+14)+'px';tt.style.top=(evt.clientY-10)+'px';})
+            .on('mouseleave', ()=>{path.attr('fill',fill).attr('stroke-width',.7);tt.style.display='none';})
+            .on('click', ()=>{ if(d?.홈피) window.open(d.홈피,'_blank'); });
+
+          if (area > r*r*.0016) {
+            const fs = Math.min(sz*.016, Math.max(5.5, Math.sqrt(area)*.16));
+            lbG.append('text').attr('x',pcx).attr('y',pcy)
+              .attr('text-anchor','middle').attr('dominant-baseline','middle')
+              .attr('font-size',fs).attr('fill','rgba(255,235,210,.9)')
+              .attr('pointer-events','none').style('font-weight','600')
+              .text(trunc(node.data.name, fs>10?9:6));
+          }
+
+        // ── Agency cell ──
+        } else {
+          const ag = node.data._agency;
+          path.style('cursor', ag?.url ? 'pointer' : 'default');
+          path.on('mouseenter', evt=>{
+              path.attr('fill', d3.color(fill)?.brighter(.5)?.toString()??fill).attr('stroke-width',1.4);
+              const compCnt = ag?.value||0;
+              tt.style.display='block';
+              tt.innerHTML=`<strong>${ag?.name||node.data.name}</strong>
+                <em>지역: ${node.parent.data.name||''}</em>
+                ${compCnt>0?`<em>선정 기업: ${compCnt}개</em>`:''}
+                ${ag?.url?`<em style="color:#4cc9f0">🔗 클릭하여 홈페이지</em>`:''}`;
+            })
+            .on('mousemove', evt=>{tt.style.left=(evt.clientX+14)+'px';tt.style.top=(evt.clientY-10)+'px';})
+            .on('mouseleave', ()=>{path.attr('fill',fill).attr('stroke-width',.7);tt.style.display='none';})
+            .on('click', ()=>{ if(ag?.url) window.open(ag.url,'_blank'); });
+
+          if (area > r*r*.0018) {
+            const fs = Math.min(sz*.018, Math.max(5.5, Math.sqrt(area)*.15));
+            lbG.append('text').attr('x',pcx).attr('y',pcy-(fs*.5))
+              .attr('text-anchor','middle').attr('dominant-baseline','middle')
+              .attr('font-size',fs).attr('fill','rgba(255,235,210,.9)')
+              .attr('pointer-events','none').style('font-weight','700')
+              .text(trunc(ag?.name||node.data.name, fs>10?9:6));
+            if (ag?.value>0 && area>r*r*.005) {
+              lbG.append('text').attr('x',pcx).attr('y',pcy+(fs*.8))
+                .attr('text-anchor','middle').attr('dominant-baseline','middle')
+                .attr('font-size',fs*.72).attr('fill','rgba(200,160,110,.55)')
+                .attr('pointer-events','none')
+                .text(ag.value+'개사');
+            }
+          }
+        }
+
+      } else {
+        // depth 1 – group label
+        const cnt = node.children?.length||0;
+        if (area > r*r*.01) {
+          const fs = Math.min(sz*.02, Math.max(9, Math.sqrt(area)*.1));
+          lbG.append('text').attr('x',pcx).attr('y',pcy-(fs*.55))
+            .attr('text-anchor','middle').attr('dominant-baseline','middle')
+            .attr('font-size',fs).attr('fill','rgba(255,215,170,.65)')
+            .attr('pointer-events','none').style('font-weight','800')
+            .text(trunc(node.data.name,10));
+          lbG.append('text').attr('x',pcx).attr('y',pcy+(fs*.85))
+            .attr('text-anchor','middle').attr('dominant-baseline','middle')
+            .attr('font-size',fs*.72).attr('fill','rgba(200,150,110,.45)')
+            .attr('pointer-events','none')
+            .text(cnt+(isAgency?'개':'개사'));
+        }
+      }
+    });
+  }
+
+  cw.innerHTML=''; cw.appendChild(svg.node());
+
+  // ── Legend ──
+  const lg = document.getElementById('lg'); lg.innerHTML='';
+  gNames.forEach((n,i)=>{
+    const item=document.createElement('div'); item.className='li';
+    const dot=document.createElement('div'); dot.className='ld'; dot.style.background=pal[i%pal.length];
+    const lbl=document.createElement('span');
+    const cnt=hier.children.find(g=>g.name===n)?.children.length||0;
+    lbl.textContent=`${trunc(n,9)} (${cnt})`;
+    item.appendChild(dot); item.appendChild(lbl); lg.appendChild(item);
+  });
+
+  // ── Stats bar ──
+  const vd  = viewData();
+  const wd  = vd.filter(d=>d.소요월!=null&&d.소요월>=0);
+  const avg = wd.length ? Math.round(d3.mean(wd,d=>d.소요월)) : null;
+  const agCnt = Object.keys(AGENCY_MAP).length;
+  document.getElementById('sb').innerHTML = isAgency
+    ? `<span>운영기관 수: <b>${agCnt}</b></span>
+       <span>총 선정 기업: <b>${S.data.length.toLocaleString()}</b></span>`
+    : `<span>기업 수: <b>${vd.length.toLocaleString()}</b></span>`+
+      (avg!=null?`<span>평균 선정 소요: <b>${avg}개월</b></span>`:'')+
+      `<span>분야 수: <b>${new Set(vd.map(d=>d.분야)).size}</b></span>`+
+      `<span>운영기관 수: <b>${new Set(vd.map(d=>d.기관)).size}</b></span>`;
+  updateArcUI();
+
+  // In embed mode, hide all chrome below the circle
+  if (IS_EMBED) {
+    ['lg','sb','sm','ft'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+  }
+}
+
+// ══════ ARC UI ══════
+function getCircle() {
+  const W = window.innerWidth;
+  const sz = Math.min(W * 0.97, 2000);
+  return { W, sz, cx: sz/2, cy: sz/2, r: sz*0.47, offX: Math.round((W-sz)/2) };
+}
+function arcPt(cx,cy,r,deg) {
+  const a=deg*Math.PI/180; return [cx+r*Math.cos(a), cy+r*Math.sin(a)];
+}
+function buildArcPath(cx,cy,r,d1,d2) {
+  const [x1,y1]=arcPt(cx,cy,r,d1), [x2,y2]=arcPt(cx,cy,r,d2);
+  const span=((d2-d1)+360)%360;
+  return `M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${span>180?1:0} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+}
+
+function updateArcUI() {
+  const {W, sz, cx, cy, r, offX} = getCircle();
+
+  const tSz = Math.min(Math.max(13, sz*0.052), 88);
+  const iSz = Math.min(Math.max(8,  sz*0.016), 22);
+
+  // Read topPad from CSS (set via clamp in stylesheet, avoids scroll jump)
+  const topPad = parseInt(getComputedStyle(document.getElementById('arc-wrap')).paddingTop, 10) || 0;
+
+  const arcSvg = document.getElementById('arc-svg');
+  arcSvg.style.top  = topPad + 'px';
+  arcSvg.style.left = offX + 'px';
+  arcSvg.style.width = sz + 'px';
+  arcSvg.style.height = sz + 'px';
+  arcSvg.setAttribute('width', sz);
+  arcSvg.setAttribute('height', sz);
+
+  // Title arc: just outside top of circle (r + 2.5%)
+  const tR = r + sz*0.025;
+  const tPath = buildArcPath(cx, cy, tR, 213, 327);
+  // Info arc: just outside the left circle edge (in dark area), clockwise 148°→212°
+  // SVG: 0°=right,90°=bottom,180°=left,270°=top → 148≈lower-left,212≈upper-left
+  const iR = r + sz*0.016;
+  const iPath = buildArcPath(cx, cy, iR, 148, 212);
+
+  arcSvg.innerHTML = IS_EMBED ? '' : `
+    <defs>
+      <path id="ap-t" d="${tPath}"/>
+      <path id="ap-i" d="${iPath}"/>
+    </defs>
+    <text text-anchor="middle">
+      <textPath href="#ap-t" startOffset="50%">
+        <tspan font-family="'Montserrat',sans-serif" font-weight="900"
+               font-size="${tSz.toFixed(1)}" fill="#ffffff"
+               letter-spacing="${(tSz*0.07).toFixed(1)}">TIPS</tspan><tspan
+               font-family="'Montserrat',sans-serif" font-weight="200"
+               font-size="${(tSz*0.56).toFixed(1)}" fill="rgba(255,255,255,.40)"
+               letter-spacing="${(tSz*0.30).toFixed(1)}"
+               dx="${(tSz*0.28).toFixed(1)}">WORLD</tspan>
+      </textPath>
+    </text>
+    <text text-anchor="middle">
+      <textPath href="#ap-i" startOffset="50%">
+        <tspan font-family="'Montserrat','Noto Sans KR',sans-serif" font-weight="400"
+               font-size="${iSz.toFixed(1)}" fill="rgba(220,180,160,.70)"
+               letter-spacing="${(iSz*0.06).toFixed(1)}">대한민국 TIPS 스타트업 생태계 · ${S.data.length.toLocaleString()}개 기업 · 2013–2025</tspan>
+      </textPath>
+    </text>`;
+
+  // Right-arc tab buttons – centered on arc, tangent-aligned
+  const arcTabs = document.getElementById('arc-tabs');
+  arcTabs.innerHTML = '';
+  if (IS_EMBED) return;   // embed mode: no chrome buttons
+  const TABS = [
+    {id:'year',   label:'연도별',    c:'#f72585', ang:-58},
+    {id:'field',  label:'사업분야별', c:'#4361ee', ang:-38},
+    {id:'agency', label:'운영기관',   c:'#f4a261', ang:-20}
+  ];
+  const bFsz  = Math.min(Math.max(10, sz*0.014), 16);
+  const bPadV = Math.max(4,  (sz*0.005)|0);
+  const bPadH = Math.max(10, (sz*0.011)|0);
+  // Anchor sits just outside the circle
+  const btnR = r + sz * 0.012;
+
+  TABS.forEach(t => {
+    const rad = t.ang * Math.PI / 180;
+    // Center of button placed at angle t.ang on the arc
+    const ancX = offX + cx + btnR * Math.cos(rad);
+    const ancY = topPad + cy + btnR * Math.sin(rad);
+    const isOn = S.tab === t.id;
+    const btn = document.createElement('button');
+    btn.className = 'arc-btn' + (isOn ? ' on' : '');
+    btn.textContent = t.label;
+    // rotate(t.ang+90) makes the button lie along the tangent (not radially outward)
+    // translate(-50%, -50%) centers the button on the anchor point
+    btn.style.cssText = `
+      left:${ancX.toFixed(1)}px;
+      top:${ancY.toFixed(1)}px;
+      transform-origin:0 0;
+      transform:rotate(${t.ang + 90}deg) translate(-50%, -50%);
+      border-color:${t.c};
+      color:${isOn?'#fff':t.c};
+      background:${isOn?t.c:'rgba(6,3,12,.88)'};
+      font-size:${bFsz}px;
+      padding:${bPadV}px ${bPadH}px;
+    `;
+    btn.onclick = () => { S.tab=t.id; S.field=null; writeUrlParams(); buildActionBtns(); buildSubMenu(); buildAll(); };
+    arcTabs.appendChild(btn);
+  });
+
+  // ── "By StartupRecipe" link – upper-right, just past the TIPS WORLD title ──
+  const srAng = -30;   // ~1:30 o'clock, to the right of "WORLD"
+  const srR   = r + sz * 0.065;
+  const srRad = srAng * Math.PI / 180;
+  const srX   = offX + cx + srR * Math.cos(srRad);
+  const srY   = topPad + cy + srR * Math.sin(srRad);
+  const srFsz = Math.min(Math.max(8, sz * 0.011), 13);
+  const srA   = document.createElement('a');
+  srA.href    = 'https://startuprecipe.co.kr/';
+  srA.target  = '_blank';
+  srA.rel     = 'noopener';
+  srA.textContent = 'By StartupRecipe';
+  srA.style.cssText = `
+    position:absolute;
+    left:${srX.toFixed(1)}px; top:${srY.toFixed(1)}px;
+    transform-origin:0 0;
+    transform:rotate(${srAng + 90}deg) translate(-50%,-50%);
+    font-family:'Montserrat',sans-serif; font-weight:300;
+    font-size:${srFsz}px; color:rgba(255,255,255,.35);
+    letter-spacing:.12em; text-decoration:none; white-space:nowrap;
+    pointer-events:all; transition:color .2s;
+  `;
+  srA.onmouseenter = () => srA.style.color = 'rgba(255,255,255,.80)';
+  srA.onmouseleave = () => srA.style.color = 'rgba(255,255,255,.35)';
+  arcTabs.appendChild(srA);
+}
+
+// ══════ UI BUILDERS ══════
+function buildTabs() { updateArcUI(); }
+
+function buildActionBtns() {
+  document.getElementById('ab').innerHTML = '';   // keep empty (hidden via CSS)
+  const arcAction = document.getElementById('arc-action');
+  arcAction.innerHTML = '';
+  if (IS_EMBED) return;
+  if (S.tab !== 'year' && S.tab !== 'agency') return;
+
+  const {W, sz, cx, cy, r, offX} = getCircle();
+  const topPad = parseInt(getComputedStyle(document.getElementById('arc-wrap')).paddingTop,10)||0;
+  // Left arc buttons — hugging the circle curve, clear of bottom legend
+  const ACTS = S.tab === 'year'
+    ? [{label:'선정 속도 산점도', c:'#f72585', ang:113, fn:showScatter},
+       {label:'소요기간 밀도 분포', c:'#b5179e', ang:128, fn:showDensity},
+       {label:'전체 목록 보기',     c:'#06d6a0', ang:143, fn:showList}]
+    : [{label:'네트워크 갤럭시',    c:'#f4a261', ang:118, fn:showNetwork},
+       {label:'전체 목록 보기',     c:'#06d6a0', ang:134, fn:showList}];
+
+  const bFsz  = Math.min(Math.max(9, sz*0.013), 15);
+  const bPadV = Math.max(4, (sz*0.005)|0);
+  const bPadH = Math.max(9, (sz*0.010)|0);
+  const btnR  = r + sz * 0.028;   // close to circle edge (~20px gap)
+
+  ACTS.forEach(t => {
+    const rad  = t.ang * Math.PI / 180;
+    const ancX = offX + cx + btnR * Math.cos(rad);
+    const ancY = topPad + cy + btnR * Math.sin(rad);
+    const btn  = document.createElement('button');
+    btn.className = 'arc-btn';
+    btn.textContent = t.label;
+    // rotate(ang-90) → tangent going counterclockwise → text reads naturally upward along left arc
+    btn.style.cssText = `
+      left:${ancX.toFixed(1)}px; top:${ancY.toFixed(1)}px;
+      transform-origin:0 0;
+      transform:rotate(${t.ang - 90}deg) translate(-50%,-50%);
+      border-color:${t.c}; color:${t.c};
+      background:rgba(6,3,12,.88);
+      font-size:${bFsz}px; padding:${bPadV}px ${bPadH}px;
+    `;
+    btn.onmouseenter = () => { btn.style.background=t.c; btn.style.color='#fff'; };
+    btn.onmouseleave = () => { btn.style.background='rgba(6,3,12,.88)'; btn.style.color=t.c; };
+    btn.onclick = t.fn;
+    arcAction.appendChild(btn);
+  });
+}
+
+function buildSubMenu() {
+  const el=document.getElementById('sm'); el.innerHTML='';
+  if (IS_EMBED) return;
+  const c=(tab,val,lbl,active,col)=>{
+    const b=document.createElement('button'); b.className='su'+(active?' on':'');
+    b.textContent=lbl; b.style.borderColor=col; b.style.color=active?'#fff':col;
+    if(active) b.style.background=col;
+    b.onclick=()=>{
+      if(tab==='year')  S.year=val;
+      if(tab==='field') S.field=val;
+      writeUrlParams();
+      buildSubMenu(); render();
+    };
+    el.appendChild(b);
+  };
+
+  if(S.tab==='year') {
+    years().forEach(y=>c('year',y,y+'년',S.year===y,'#f72585'));
+  } else if(S.tab==='field') {
+    c('field',null,'전체',!S.field,'#4361ee');
+    fields().forEach(f=>c('field',f,f,S.field===f,'#4361ee'));
+  }
+  // agency tab: no sub-menu (circle already shows all agencies)
+}
+
+function buildAll(){ buildTabs(); buildActionBtns(); buildSubMenu(); render(); }
+
+// ══════ LIST MODAL ══════
+function showList() {
+  const isAgency = S.tab === 'agency';
+
+  // ── Agency tab: show agency directory from spreadsheet ──
+  if (isAgency) {
+    const sorted = [...AGENCY_ROWS].sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    modal(`TIPS 운영기관 전체 목록 (${sorted.length}개)`, ct => {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'overflow-x:auto;max-height:60vh;overflow-y:auto;';
+      const tbl = document.createElement('table');
+      tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.8rem;';
+      const TH = s => `<th style="padding:6px 10px;border-bottom:1px solid #5a2535;text-align:left;color:#f5d080;position:sticky;top:0;background:#1c0f18;white-space:nowrap;">${s}</th>`;
+      tbl.innerHTML = `<thead><tr>${TH('기관명')}${TH('지역')}${TH('전문투자분야')}${TH('홈페이지')}</tr></thead>`;
+      const tbody = document.createElement('tbody');
+      sorted.forEach((a,i) => {
+        const tr = document.createElement('tr');
+        tr.style.background = i%2===0 ? 'transparent' : 'rgba(255,255,255,.03)';
+        const TD = (v,col='var(--text)') => `<td style="padding:5px 10px;border-bottom:1px solid #2a1525;color:${col};">${v}</td>`;
+        const urlCell = a.url
+          ? `<td style="padding:5px 10px;border-bottom:1px solid #2a1525;"><a href="${a.url}" target="_blank" rel="noopener" style="color:#4cc9f0;text-decoration:none;word-break:break-all;">${a.url}</a></td>`
+          : TD('—','#5a3040');
+        tr.innerHTML = TD(`<a href="${a.url||'#'}" target="_blank" rel="noopener" style="color:#f0e0d8;text-decoration:none;">${a.name}</a>`)
+          + TD(a.region, '#f4a261') + TD(a.field,'var(--muted)') + urlCell;
+        tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);
+      wrap.appendChild(tbl);
+      ct.appendChild(wrap);
+    });
+    return;
+  }
+
+  // ── Year / field tab: show company list ──
+  const vd = viewData();
+  const title = `${S.year}년 선정 기업 전체 목록 (${vd.length.toLocaleString()}개)`;
+  modal(title, ct => {
+    const cols = [
+      {k:'회사명',    v:d=>d.회사명},
+      {k:'사업분야',  v:d=>d.분야||''},
+      {k:'운영기관',  v:d=>d.기관||''},
+      {k:'선정일',    v:d=>d.선정 ? d.선정.toLocaleDateString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit'}) : ''},
+      {k:'사이트',    v:d=>d.홈피}
+    ];
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'overflow-x:auto;max-height:60vh;overflow-y:auto;';
+    const tbl = document.createElement('table');
+    tbl.style.cssText = 'width:100%;border-collapse:collapse;font-size:.8rem;';
+    const thead = document.createElement('thead');
+    thead.innerHTML = `<tr>${cols.map(c=>`<th style="padding:6px 10px;border-bottom:1px solid #5a2535;text-align:left;color:#f5d080;position:sticky;top:0;background:#1c0f18;">${c.k}</th>`).join('')}</tr>`;
+    tbl.appendChild(thead);
+    const tbody = document.createElement('tbody');
+    [...vd].sort((a,b)=>(a.회사명||'').localeCompare(b.회사명||'','ko')).forEach((d,i) => {
+      const tr = document.createElement('tr');
+      tr.style.background = i%2===0 ? 'transparent' : 'rgba(255,255,255,.03)';
+      tr.innerHTML = cols.map(c => {
+        const val = c.v(d);
+        if (c.k==='사이트' && val)
+          return `<td style="padding:5px 10px;border-bottom:1px solid #2a1525;"><a href="${val}" target="_blank" rel="noopener" style="color:#4cc9f0;text-decoration:none;word-break:break-all;">${val}</a></td>`;
+        if (c.k==='회사명' && d.홈피)
+          return `<td style="padding:5px 10px;border-bottom:1px solid #2a1525;"><a href="${d.홈피}" target="_blank" rel="noopener" style="color:#f0e0d8;text-decoration:none;">${val}</a></td>`;
+        return `<td style="padding:5px 10px;border-bottom:1px solid #2a1525;color:${c.k==='운영기관'?'#f4a261':'var(--text)'}">${val}</td>`;
+      }).join('');
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    ct.appendChild(wrap);
+  });
+}
+
+// ══════ MODALS ══════
+function modal(title,fn){
+  const ov=document.createElement('div'); ov.className='mo';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  const bx=document.createElement('div'); bx.className='mb';
+  const cl=document.createElement('button'); cl.className='mc'; cl.innerHTML='✕'; cl.onclick=()=>ov.remove();
+  const tl=document.createElement('div'); tl.className='mt'; tl.textContent=title;
+  const ct=document.createElement('div');
+  bx.appendChild(cl); bx.appendChild(tl); bx.appendChild(ct);
+  ov.appendChild(bx); document.body.appendChild(ov); fn(ct);
+}
+
+function kde(k,X,V){return X.map(x=>[x,d3.mean(V,v=>k(x-v))]);}
+function epan(bw){return v=>{v/=bw;return Math.abs(v)<=1?.75*(1-v*v)/bw:0;};}
+
+function showScatter(){
+  if (IS_EMBED) return;   // embed mode: no modals
+  modal('선정 속도 산점도 — 설립 후 TIPS 선정 소요기간', ct=>{
+    const W=Math.min(window.innerWidth*.84,680),H=400;
+    const mg={t:20,r:22,b:52,l:58},iw=W-mg.l-mg.r,ih=H-mg.t-mg.b;
+    const pts=S.data.filter(d=>d.설립일&&d.소요월!=null&&d.소요월>=0&&d.소요월<=120);
+    const allF=[...new Set(pts.map(d=>d.분야))];
+    const cSc=d3.scaleOrdinal(PAL.field).domain(allF);
+    const xSc=d3.scaleLinear().domain([2008,2025]).range([0,iw]);
+    const ySc=d3.scaleLinear().domain([0,d3.max(pts,d=>d.소요월)*1.05]).range([ih,0]);
+    const svg=d3.create('svg').attr('width',W).attr('height',H).style('background','#120810').style('border-radius','8px');
+    const g=svg.append('g').attr('transform',`translate(${mg.l},${mg.t})`);
+    g.selectAll('.gy').data(ySc.ticks(6)).join('line')
+      .attr('x1',0).attr('x2',iw).attr('y1',d=>ySc(d)).attr('y2',d=>ySc(d)).attr('stroke','#2a1525').attr('stroke-dasharray','3,3');
+    g.append('g').attr('transform',`translate(0,${ih})`).call(d3.axisBottom(xSc).ticks(7).tickFormat(d3.format('d')))
+      .call(a=>a.selectAll('text,line,path').style('stroke','#806050').style('fill','#806050'));
+    g.append('g').call(d3.axisLeft(ySc).ticks(6))
+      .call(a=>a.selectAll('text,line,path').style('stroke','#806050').style('fill','#806050'));
+    g.append('text').attr('x',iw/2).attr('y',ih+40).attr('text-anchor','middle').attr('fill','#806050').attr('font-size','11px').text('설립 연도');
+    g.append('text').attr('transform','rotate(-90)').attr('x',-ih/2).attr('y',-45).attr('text-anchor','middle').attr('fill','#806050').attr('font-size','11px').text('소요 개월');
+    const tr=[...d3.rollup(pts,v=>d3.mean(v,d=>d.소요월),d=>d.연도)].sort((a,b)=>a[0]-b[0]);
+    g.append('path').datum(tr).attr('d',d3.line().x(([y])=>xSc(y)).y(([,m])=>ySc(m)).curve(d3.curveCatmullRom))
+      .attr('fill','none').attr('stroke','#f5d080').attr('stroke-width',2).attr('opacity',.55).attr('stroke-dasharray','5,3');
+    g.selectAll('circle').data(pts).join('circle')
+      .attr('cx',d=>xSc(d.설립일.getFullYear())).attr('cy',d=>ySc(d.소요월))
+      .attr('r',3.5).attr('fill',d=>cSc(d.분야)).attr('opacity',.7).attr('stroke','#120810').attr('stroke-width',.4);
+    ct.appendChild(svg.node());
+  });
+}
+
+function showDensity(){
+  if (IS_EMBED) return;
+  modal('연도별 TIPS 선정 소요기간 밀도 분포 (Ridge Plot)', ct=>{
+    const W=Math.min(window.innerWidth*.84,680),H=420;
+    const mg={t:20,r:28,b:52,l:68},iw=W-mg.l-mg.r,ih=H-mg.t-mg.b;
+    const allY=years(),filt=S.data.filter(d=>d.소요월!=null&&d.소요월>=0&&d.소요월<=120);
+    const xSc=d3.scaleLinear().domain([0,100]).range([0,iw]);
+    const ySc=d3.scaleBand().domain(allY).range([0,ih]).padding(.12);
+    const cSc=d3.scaleSequential(d3.interpolateMagma).domain([2013,2025]);
+    const svg=d3.create('svg').attr('width',W).attr('height',H).style('background','#120810').style('border-radius','8px');
+    const g=svg.append('g').attr('transform',`translate(${mg.l},${mg.t})`);
+    g.append('g').attr('transform',`translate(0,${ih})`).call(d3.axisBottom(xSc).ticks(8))
+      .call(a=>a.selectAll('text,line,path').style('stroke','#806050').style('fill','#806050'));
+    g.append('g').call(d3.axisLeft(ySc).tickFormat(d=>d+'년'))
+      .call(a=>a.selectAll('text,line,path').style('stroke','#806050').style('fill','#806050'));
+    g.append('text').attr('x',iw/2).attr('y',ih+40).attr('text-anchor','middle').attr('fill','#806050').attr('font-size','11px').text('설립→선정 소요 개월');
+    allY.forEach(yr=>{
+      const vals=filt.filter(d=>d.연도===yr).map(d=>d.소요월);
+      if(vals.length<3) return;
+      const den=kde(epan(5),d3.range(0,101,1),vals);
+      const mx=d3.max(den,d=>d[1]); if(!mx) return;
+      const ys=ySc(yr),bh=ySc.bandwidth();
+      g.append('path').datum(den)
+        .attr('d',d3.area().x(d=>xSc(d[0])).y0(ys+bh).y1(d=>ys+bh-Math.max(0,d[1]/mx)*bh*.92).curve(d3.curveBasis))
+        .attr('fill',cSc(yr)).attr('opacity',.82);
+      const med=d3.median(vals);
+      g.append('line').attr('x1',xSc(med)).attr('x2',xSc(med)).attr('y1',ys).attr('y2',ys+bh)
+        .attr('stroke','#fff').attr('stroke-width',1).attr('opacity',.45).attr('stroke-dasharray','2,2');
+    });
+    ct.appendChild(svg.node());
+  });
+}
+
+function showNetwork(){
+  if (IS_EMBED) return;
+  modal('🌌 운영기관 × 사업분야 네트워크 갤럭시', ct=>{
+    const W=Math.min(window.innerWidth*.86,720),H=530;
+    const topAg=[...d3.rollup(S.data,v=>v.length,d=>d.기관)].sort((a,b)=>b[1]-a[1]).slice(0,28).map(([k])=>k);
+    const allF=fields();
+    const nodes=[{id:'__T__',type:'root',label:'TIPS',r:18},
+      ...topAg.map(a=>({id:'a:'+a,type:'agency',label:a,r:9})),
+      ...allF.map(f=>({id:'f:'+f,type:'field',label:f,r:6}))];
+    const links=[];
+    topAg.forEach(a=>links.push({source:'__T__',target:'a:'+a,value:S.data.filter(d=>d.기관===a).length}));
+    const afM={};
+    S.data.forEach(d=>{const k='a:'+d.기관+'||f:'+d.분야;afM[k]=(afM[k]||0)+1;});
+    topAg.forEach(a=>allF.forEach(f=>{if((afM['a:'+a+'||f:'+f]||0)>=3)links.push({source:'a:'+a,target:'f:'+f,value:afM['a:'+a+'||f:'+f]});}));
+    const cN=d3.scaleOrdinal().domain(['root','agency','field']).range(['#f5d080','#f4a261','#4895ef']);
+    const svg=d3.create('svg').attr('width',W).attr('height',H).style('background','#07050e').style('border-radius','8px');
+    const stars=Array.from({length:130},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.3,o:Math.random()*.6+.2}));
+    svg.append('g').selectAll('circle').data(stars).join('circle')
+      .attr('cx',d=>d.x).attr('cy',d=>d.y).attr('r',d=>d.r).attr('fill','#fff').attr('opacity',d=>d.o);
+    const lkEl=svg.append('g').selectAll('line').data(links).join('line')
+      .attr('stroke','rgba(255,255,255,.12)').attr('stroke-width',d=>Math.sqrt(d.value)*.33);
+    const ndEl=svg.append('g').selectAll('circle').data(nodes).join('circle')
+      .attr('r',d=>d.r).attr('fill',d=>cN(d.type)).attr('opacity',.88)
+      .attr('stroke','#ffffff25').attr('stroke-width',.5).style('cursor','grab')
+      .call(d3.drag()
+        .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.3).restart();d.fx=d.x;d.fy=d.y;})
+        .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;})
+        .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+    const lbEl=svg.append('g').selectAll('text')
+      .data(nodes.filter(d=>d.type!=='field'||allF.length<12)).join('text')
+      .attr('text-anchor','middle').attr('font-size',d=>d.type==='root'?'12px':d.type==='agency'?'8.5px':'7px')
+      .attr('fill',d=>cN(d.type)).attr('pointer-events','none').text(d=>trunc(d.label,7));
+    const sim=d3.forceSimulation(nodes)
+      .force('link',d3.forceLink(links).id(d=>d.id).distance(d=>d.source.type==='root'?110:65).strength(.4))
+      .force('charge',d3.forceManyBody().strength(-90))
+      .force('center',d3.forceCenter(W/2,H/2))
+      .force('collide',d3.forceCollide().radius(d=>d.r+5))
+      .on('tick',()=>{
+        lkEl.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+        ndEl.attr('cx',d=>d.x).attr('cy',d=>d.y);
+        lbEl.attr('x',d=>d.x).attr('y',d=>d.y-d.r-2);
+      });
+    const legSvg=d3.create('svg').attr('width',W).attr('height',28).style('background','transparent');
+    [['root','TIPS 중앙'],['agency','운영기관'],['field','사업분야']].forEach(([t,l],i)=>{
+      const x=40+i*130;
+      legSvg.append('circle').attr('cx',x).attr('cy',14).attr('r',5).attr('fill',cN(t));
+      legSvg.append('text').attr('x',x+10).attr('y',14).attr('dominant-baseline','middle').attr('fill','#a08070').attr('font-size','11px').text(l);
+    });
+    ct.appendChild(svg.node()); ct.appendChild(legSvg.node());
+  });
+}
+
+// ══════ BOOT ══════
+if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+if (IS_EMBED) {
+  document.body.classList.add('embed');
+  // Disable CSS animations in embed context to save paint cost
+  const s = document.createElement('style');
+  s.textContent = '*, *::before, *::after { animation-duration: 0s !important; transition-duration: 0s !important; }';
+  document.head.appendChild(s);
+}
+(async () => {
+  try {
+    document.getElementById('lm').textContent = '데이터 불러오는 중…';
+    await fetchData();
+    S.data = buildData();
+  } catch(e) {
+    document.getElementById('lm').textContent = '데이터 로드 실패: ' + e.message;
+    console.error(e);
+    return;
+  }
+  readUrlParams();   // apply ?view=...&id=... before first render
+  document.getElementById('ls').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  buildTabs(); buildActionBtns(); buildSubMenu();
+  render().then(() => window.scrollTo(0, 0));
+})();
+
+let rt;
+window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(S.data.length)render();},320);});
+</script>
+</body>
+</html>
